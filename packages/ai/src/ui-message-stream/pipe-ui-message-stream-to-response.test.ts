@@ -1,4 +1,5 @@
 import { convertArrayToReadableStream } from '@ai-sdk/provider-utils/test';
+import type { TextStreamPart } from '../generate-text/stream-text-result';
 import { createMockServerResponse } from '../test/mock-server-response';
 import { pipeUIMessageStreamToResponse } from './pipe-ui-message-stream-to-response';
 import { describe, it, expect } from 'vitest';
@@ -79,6 +80,44 @@ describe('pipeUIMessageStreamToResponse', () => {
     expect(decodedChunks).toMatchInlineSnapshot(`
       [
         "data: {"type":"error","errorText":"Custom error message"}
+
+      ",
+        "data: [DONE]
+
+      ",
+      ]
+    `);
+  });
+
+  it('should write text stream parts to ServerResponse', async () => {
+    const mockResponse = createMockServerResponse();
+
+    pipeUIMessageStreamToResponse({
+      response: mockResponse,
+      stream: convertArrayToReadableStream<TextStreamPart<{}>>([
+        { type: 'start' },
+        { type: 'text-start', id: '1' },
+        { type: 'text-delta', id: '1', text: 'test-data' },
+        { type: 'text-end', id: '1' },
+      ]),
+      originalMessages: [],
+      generateMessageId: () => 'msg-1',
+    });
+
+    await mockResponse.waitForEnd();
+
+    expect(mockResponse.getDecodedChunks()).toMatchInlineSnapshot(`
+      [
+        "data: {"type":"start","messageId":"msg-1"}
+
+      ",
+        "data: {"type":"text-start","id":"1"}
+
+      ",
+        "data: {"type":"text-delta","id":"1","delta":"test-data"}
+
+      ",
+        "data: {"type":"text-end","id":"1"}
 
       ",
         "data: [DONE]

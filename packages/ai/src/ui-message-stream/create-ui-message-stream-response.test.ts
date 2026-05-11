@@ -2,6 +2,7 @@ import {
   convertArrayToReadableStream,
   convertReadableStreamToArray,
 } from '@ai-sdk/provider-utils/test';
+import type { TextStreamPart } from '../generate-text/stream-text-result';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createUIMessageStreamResponse } from './create-ui-message-stream-response';
 
@@ -75,6 +76,67 @@ describe('createUIMessageStreamResponse', () => {
     ).toMatchInlineSnapshot(`
       [
         "data: {"type":"error","errorText":"Custom error message"}
+
+      ",
+        "data: [DONE]
+
+      ",
+      ]
+    `);
+  });
+
+  it('should create a Response from a text stream part stream', async () => {
+    const stream = convertArrayToReadableStream<TextStreamPart<{}>>([
+      { type: 'start' },
+      { type: 'text-start', id: '1' },
+      { type: 'text-delta', id: '1', text: 'test-data' },
+      { type: 'text-end', id: '1' },
+      {
+        type: 'finish',
+        finishReason: 'stop',
+        rawFinishReason: 'stop',
+        totalUsage: {
+          inputTokens: 1,
+          outputTokens: 1,
+          totalTokens: 2,
+          inputTokenDetails: {
+            noCacheTokens: undefined,
+            cacheReadTokens: undefined,
+            cacheWriteTokens: undefined,
+          },
+          outputTokenDetails: {
+            textTokens: undefined,
+            reasoningTokens: undefined,
+          },
+        },
+      },
+    ]);
+
+    const response = createUIMessageStreamResponse({
+      stream,
+      originalMessages: [],
+      generateMessageId: () => 'msg-1',
+    });
+
+    expect(
+      await convertReadableStreamToArray(
+        response.body!.pipeThrough(new TextDecoderStream()),
+      ),
+    ).toMatchInlineSnapshot(`
+      [
+        "data: {"type":"start","messageId":"msg-1"}
+
+      ",
+        "data: {"type":"text-start","id":"1"}
+
+      ",
+        "data: {"type":"text-delta","id":"1","delta":"test-data"}
+
+      ",
+        "data: {"type":"text-end","id":"1"}
+
+      ",
+        "data: {"type":"finish","finishReason":"stop"}
 
       ",
         "data: [DONE]
