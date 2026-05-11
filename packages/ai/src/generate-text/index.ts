@@ -69,6 +69,12 @@ export type {
   TextStreamPart,
   UIMessageStreamOptions,
 } from './stream-text-result';
+export {
+  toUIMessageChunk,
+  type ToUIMessageChunkOptions,
+  type ToUIMessageChunkPart,
+} from './to-ui-message-chunk';
+export { toUIMessageChunkStream } from './to-ui-message-chunk-stream';
 export type {
   GenericToolApprovalFunction,
   SingleToolApprovalFunction,

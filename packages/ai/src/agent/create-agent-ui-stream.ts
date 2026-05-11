@@ -5,6 +5,7 @@ import type {
   Tool,
   ToolSet,
 } from '@ai-sdk/provider-utils';
+import { toUIMessageChunkStream } from '../generate-text';
 import type { GenerateTextOnStepFinishCallback } from '../generate-text/generate-text-events';
 import type { Output } from '../generate-text/output';
 import type { StreamTextTransform } from '../generate-text/stream-text';
@@ -18,7 +19,10 @@ import type {
   UIMessage,
 } from '../ui/ui-messages';
 import { validateUIMessages } from '../ui/validate-ui-messages';
-import type { AsyncIterableStream } from '../util/async-iterable-stream';
+import {
+  createAsyncIterableStream,
+  type AsyncIterableStream,
+} from '../util/async-iterable-stream';
 import type { Agent } from './agent';
 
 /**
@@ -103,10 +107,18 @@ export async function createAgentUIStream<
     onStepFinish,
   });
 
-  return result.toUIMessageStream({
-    ...uiMessageStreamOptions,
-    // TODO reading `originalMessages` is here for bc, always use `validatedMessages` in v7
-    originalMessages:
-      uiMessageStreamOptions.originalMessages ?? validatedMessages,
-  });
+  // TODO reading `originalMessages` is here for bc, always use `validatedMessages` in v7
+  const originalMessages =
+    uiMessageStreamOptions.originalMessages ?? validatedMessages;
+
+  type AgentUIMessage = UIMessage<MESSAGE_METADATA, never, InferUITools<TOOLS>>;
+
+  return createAsyncIterableStream(
+    toUIMessageChunkStream<TOOLS, AgentUIMessage>({
+      ...uiMessageStreamOptions,
+      originalMessages,
+      stream: result.fullStream,
+      tools: agent.tools,
+    }),
+  );
 }

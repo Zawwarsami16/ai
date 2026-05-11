@@ -1,7 +1,13 @@
 export { createUIMessageStream } from './create-ui-message-stream';
-export { createUIMessageStreamResponse } from './create-ui-message-stream-response';
+export {
+  createUIMessageStreamResponse,
+  type CreateUIMessageStreamResponseOptions,
+} from './create-ui-message-stream-response';
 export { JsonToSseTransformStream } from './json-to-sse-transform-stream';
-export { pipeUIMessageStreamToResponse } from './pipe-ui-message-stream-to-response';
+export {
+  pipeUIMessageStreamToResponse,
+  type PipeUIMessageStreamToResponseOptions,
+} from './pipe-ui-message-stream-to-response';
 export { readUIMessageStream } from './read-ui-message-stream';
 export {
   uiMessageChunkSchema,

@@ -347,6 +347,19 @@ export interface StreamTextResult<
    * Converts the result to a UI message stream.
    *
    * @returns A UI message stream.
+   *
+   * @deprecated Use `toUIMessageChunkStream` instead. This method will be
+   *   removed in the next major release.
+   *
+   * ```ts
+   * const uiStream = toUIMessageChunkStream({
+   *   stream: result.fullStream,
+   *   originalMessages,
+   *   generateMessageId,
+   *   onFinish,
+   *   onError,
+   * });
+   * ```
    */
   toUIMessageStream<UI_MESSAGE extends UIMessage>(
     options?: UIMessageStreamOptions<UI_MESSAGE>,
@@ -354,6 +367,10 @@ export interface StreamTextResult<
 
   /**
    * Writes UI message stream output to a Node.js response-like object.
+   *
+   * @deprecated Use the standalone `pipeUIMessageStreamToResponse` helper from
+   *   `'ai'` instead, passing `result.fullStream`. This method will be removed
+   *   in the next major release.
    */
   pipeUIMessageStreamToResponse<UI_MESSAGE extends UIMessage>(
     response: ServerResponse,
@@ -367,6 +384,10 @@ export interface StreamTextResult<
    *
    * @param response A Node.js response-like object (ServerResponse).
    * @param init Optional headers, status code, and status text.
+   *
+   * @deprecated Use the standalone `pipeTextStreamToResponse` helper from
+   *   `'ai'` with `result.textStream` instead. This method will be removed
+   *   in the next major release.
    */
   pipeTextStreamToResponse(response: ServerResponse, init?: ResponseInit): void;
 
@@ -374,6 +395,10 @@ export interface StreamTextResult<
    * Converts the result to a streamed response object with a stream data part stream.
    *
    * @returns A response object.
+   *
+   * @deprecated Use the standalone `createUIMessageStreamResponse` helper
+   *   from `'ai'` instead, passing `result.fullStream`. This method will be
+   *   removed in the next major release.
    */
   toUIMessageStreamResponse<UI_MESSAGE extends UIMessage>(
     options?: UIMessageStreamResponseInit & UIMessageStreamOptions<UI_MESSAGE>,
@@ -384,6 +409,10 @@ export interface StreamTextResult<
    * Each text delta is encoded as UTF-8 and sent as a separate chunk.
    * Non-text-delta events are ignored.
    * @param init Optional headers, status code, and status text.
+   *
+   * @deprecated Use the standalone `createTextStreamResponse` helper from
+   *   `'ai'` with `result.textStream` instead. This method will be removed
+   *   in the next major release.
    */
   toTextStreamResponse(init?: ResponseInit): Response;
 }

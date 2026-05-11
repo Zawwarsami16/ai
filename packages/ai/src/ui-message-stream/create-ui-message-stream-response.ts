@@ -1,8 +1,26 @@
+import type { ToolSet } from '@ai-sdk/provider-utils';
+import type {
+  TextStreamPart,
+  UIMessageStreamOptions,
+} from '../generate-text/stream-text-result';
+import { toUIMessageChunkStream } from '../generate-text/to-ui-message-chunk-stream';
+import type { UIMessage } from '../ui/ui-messages';
 import { prepareHeaders } from '../util/prepare-headers';
 import { JsonToSseTransformStream } from './json-to-sse-transform-stream';
 import { UI_MESSAGE_STREAM_HEADERS } from './ui-message-stream-headers';
-import type { UIMessageChunk } from './ui-message-chunks';
+import type { InferUIMessageChunk } from './ui-message-chunks';
 import type { UIMessageStreamResponseInit } from './ui-message-stream-response-init';
+
+export type CreateUIMessageStreamResponseOptions<
+  TOOLS extends ToolSet = ToolSet,
+  UI_MESSAGE extends UIMessage = UIMessage,
+> = UIMessageStreamResponseInit &
+  UIMessageStreamOptions<UI_MESSAGE> & {
+    stream: ReadableStream<
+      TextStreamPart<TOOLS> | InferUIMessageChunk<UI_MESSAGE>
+    >;
+    tools?: TOOLS;
+  };
 
 /**
  * Creates a Response object from a UI message stream.
@@ -16,16 +34,21 @@ import type { UIMessageStreamResponseInit } from './ui-message-stream-response-i
  *
  * @returns A `Response` object with the UI message stream as the body.
  */
-export function createUIMessageStreamResponse({
+export function createUIMessageStreamResponse<
+  TOOLS extends ToolSet = ToolSet,
+  UI_MESSAGE extends UIMessage = UIMessage,
+>({
   status,
   statusText,
   headers,
   stream,
   consumeSseStream,
-}: UIMessageStreamResponseInit & {
-  stream: ReadableStream<UIMessageChunk>;
-}): Response {
-  let sseStream = stream.pipeThrough(new JsonToSseTransformStream());
+  ...uiMessageStreamOptions
+}: CreateUIMessageStreamResponseOptions<TOOLS, UI_MESSAGE>): Response {
+  let sseStream = toUIMessageChunkStream<TOOLS, UI_MESSAGE>({
+    ...uiMessageStreamOptions,
+    stream,
+  }).pipeThrough(new JsonToSseTransformStream());
 
   // when the consumeSseStream is provided, we need to tee the stream
   // and send the second part to the consumeSseStream function
